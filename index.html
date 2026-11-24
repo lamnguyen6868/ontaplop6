@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Học Vui Lớp 6 - Ôn Tập Toán & Ngữ Văn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Thư viện đọc file Excel (.xlsx/.xls/.csv) và Word (.docx) trực tiếp trên trình duyệt -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">🎓</div>
+        <div>
+          <h1 class="brand-title">Học Vui Lớp 6</h1>
+          <p class="brand-sub">Chương trình GDPT 2018</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-streak" title="Chuỗi ngày học liên tiếp">🔥 <strong id="streak-count">1</strong></span>
+        <span class="badge badge-xp" title="Điểm tích lũy">⭐ <strong id="xp-count">0</strong> XP</span>
+      </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main class="app-main">
+      <!-- TAB 1: TRANG CHỦ -->
+      <section id="view-home" class="view active">
+        <div class="hero-card">
+          <div class="hero-top">
+            <div>
+              <span class="hero-tag">Mục tiêu hôm nay</span>
+              <h2>Chào bạn nhỏ lớp 6! 👋</h2>
+              <p>Ôn tập 15 phút mỗi ngày để nắm chắc kiến thức Toán &amp; Ngữ văn nhé.</p>
+            </div>
+          </div>
+          <div class="progress-box">
+            <div class="progress-meta">
+              <span>Tiến độ chuyên đề đã học</span>
+              <strong id="overall-progress-text">0%</strong>
+            </div>
+            <div class="progress-bar">
+              <div id="overall-progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="section-heading">Chọn môn học ôn tập</h3>
+        <div class="subject-grid">
+          <button class="subject-card math" onclick="App.goToStudy('math')">
+            <div class="subject-icon">📐</div>
+            <div class="subject-info">
+              <h4>Toán học 6</h4>
+              <p>Số tự nhiên, Số nguyên, Hình học trực quan</p>
+            </div>
+            <span class="subject-arrow">→</span>
+          </button>
+
+          <button class="subject-card lit" onclick="App.goToStudy('lit')">
+            <div class="subject-icon">📚</div>
+            <div class="subject-info">
+              <h4>Ngữ văn 6</h4>
+              <p>Thể loại truyện, Thơ, Biện pháp tu từ</p>
+            </div>
+            <span class="subject-arrow">→</span>
+          </button>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-header">
+            <span>💡 Mẹo học nhanh hôm nay</span>
+            <button class="btn-text" onclick="App.nextTip()">Đổi mẹo</button>
+          </div>
+          <p id="daily-tip-text"></p>
+        </div>
+
+        <div class="parent-entry-box">
+          <button class="btn-parent-entry" onclick="Admin.openAuthModal()">
+            <span>🔐 Admin Phụ Huynh: Nạp bài tập (Ảnh, Word, Excel) &amp; Xem điểm</span>
+            <span>›</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- TAB 2: GÓC ÔN TẬP (LÝ THUYẾT & FLASHCARDS) -->
+      <section id="view-study" class="view">
+        <div class="subject-switcher">
+          <button id="study-tab-math" class="switch-btn active-math" onclick="App.setStudySubject('math')">📐 Toán học 6</button>
+          <button id="study-tab-lit" class="switch-btn" onclick="App.setStudySubject('lit')">📚 Ngữ văn 6</button>
+        </div>
+
+        <div class="mode-pills">
+          <button id="mode-theory" class="pill-btn active" onclick="App.setStudyMode('theory')">📖 Tóm tắt lý thuyết</button>
+          <button id="mode-flashcard" class="pill-btn" onclick="App.setStudyMode('flashcard')">🗂️ Thẻ ghi nhớ 3D</button>
+        </div>
+
+        <!-- Theory List -->
+        <div id="study-theory-container" class="lesson-list"></div>
+
+        <!-- Flashcards 3D -->
+        <div id="study-flashcard-container" class="flashcard-stage hidden">
+          <div class="flashcard-counter" id="flashcard-counter">Thẻ 1 / 6</div>
+          <div class="flashcard-scene" onclick="App.flipCard()">
+            <div id="flashcard-inner" class="flashcard-inner">
+              <div class="flashcard-face flashcard-front">
+                <span class="card-label">Câu hỏi / Khái niệm</span>
+                <h4 id="fc-front-text">...</h4>
+                <span class="card-hint">👆 Chạm vào thẻ để lật xem đáp án</span>
+              </div>
+              <div class="flashcard-face flashcard-back">
+                <span class="card-label">Ghi nhớ nhanh</span>
+                <p id="fc-back-text">...</p>
+                <span class="card-hint">👆 Chạm để lật lại</span>
+              </div>
+            </div>
+          </div>
+          <div class="flashcard-controls">
+            <button class="btn btn-secondary" onclick="App.prevCard()">← Thẻ trước</button>
+            <button class="btn btn-primary" onclick="App.nextCard()">Thẻ tiếp theo →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: LUYỆN TẬP TRẮC NGHIỆM -->
+      <section id="view-quiz" class="view">
+        <!-- Quiz Selector -->
+        <div id="quiz-select-screen">
+          <h3 class="section-heading">Chọn đề luyện tập</h3>
+          <p class="section-desc">Hoàn thành bài tập để nhận điểm XP và gửi phiếu kết quả cho Bố/Mẹ.</p>
+
+          <div class="quiz-deck-list">
+            <div class="quiz-deck-card math">
+              <div class="deck-badge">Toán học 6 • <span id="math-quiz-count">6</span> câu</div>
+              <h4>Đề ôn tập Toán học Lớp 6</h4>
+              <p>Số học, Số nguyên, Hình học &amp; Bài tập Bố/Mẹ giao thêm</p>
+              <button class="btn btn-math full-width" onclick="App.startQuiz('math')">Bắt đầu làm bài Toán →</button>
+            </div>
+
+            <div class="quiz-deck-card lit">
+              <div class="deck-badge">Ngữ văn 6 • <span id="lit-quiz-count">6</span> câu</div>
+              <h4>Đề ôn tập Ngữ văn Lớp 6</h4>
+              <p>Đọc hiểu văn bản, Tiếng Việt &amp; Bài tập Bố/Mẹ giao thêm</p>
+              <button class="btn btn-lit full-width" onclick="App.startQuiz('lit')">Bắt đầu làm bài Văn →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz Active Runner -->
+        <div id="quiz-active-screen" class="hidden">
+          <div class="quiz-topbar">
+            <button class="btn-icon-back" onclick="App.quitQuiz()">✕ Thoát</button>
+            <span id="quiz-progress-label" class="quiz-step">Câu 1/6</span>
+            <span id="quiz-timer" class="quiz-timer">⏱️ 00:00</span>
+          </div>
+          <div class="progress-bar small">
+            <div id="quiz-progress-bar" class="progress-fill" style="width: 16%"></div>
+          </div>
+
+          <div class="question-card">
+            <span id="q-topic-tag" class="q-tag">Chuyên đề</span>
+            <h4 id="q-text" class="q-title">Nội dung câu hỏi</h4>
+            <div id="q-image-box" class="q-image-box hidden">
+              <img id="q-image" src="" alt="Hình minh họa câu hỏi" />
+            </div>
+            <div id="q-options" class="options-stack"></div>
+
+            <div id="q-feedback" class="feedback-box hidden">
+              <strong id="q-feedback-title">Chính xác!</strong>
+              <p id="q-feedback-exp">Giải thích chi tiết...</p>
+            </div>
+          </div>
+
+          <button id="btn-next-question" class="btn btn-primary full-width hidden" onclick="App.nextQuestion()">
+            Câu tiếp theo →
+          </button>
+        </div>
+
+        <!-- Quiz Summary & Report -->
+        <div id="quiz-result-screen" class="hidden">
+          <div class="result-card">
+            <div id="result-emoji" class="result-emoji">🏆</div>
+            <h3 id="result-heading">Hoàn thành xuất sắc!</h3>
+            <p id="result-sub">Bạn đã hoàn thành bài luyện tập.</p>
+
+            <div class="result-stats">
+              <div class="stat-item">
+                <span class="stat-val" id="res-score">0/6</span>
+                <span class="stat-lbl">Số câu đúng</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-val" id="res-time">00:00</span>
+                <span class="stat-lbl">Thời gian</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-val" id="res-xp">+0 XP</span>
+                <span class="stat-lbl">Điểm thưởng</span>
+              </div>
+            </div>
+
+            <div id="sheet-sync-status" class="sync-status info">
+              ⏳ Đang kiểm tra kết nối Google Sheets...
+            </div>
+
+            <div class="report-preview-box">
+              <div class="report-preview-header">
+                <span>📋 Phiếu điểm gửi Bố/Mẹ (kèm mã chống sửa)</span>
+                <button class="btn-copy-sm" onclick="App.copyReportText()">Sao chép</button>
+              </div>
+              <pre id="report-preview-text" class="report-pre"></pre>
+            </div>
+
+            <div class="result-actions">
+              <button class="btn btn-primary full-width" onclick="App.shareReport()">
+                📤 Gửi kết quả cho Bố/Mẹ (Zalo / Chia sẻ)
+              </button>
+              <button class="btn btn-secondary full-width" onclick="App.resetQuizView()">
+                Làm đề khác
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Tab Navigation -->
+    <nav class="bottom-nav">
+      <button id="nav-home" class="nav-item active" onclick="App.switchTab('home')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Trang chủ</span>
+      </button>
+      <button id="nav-study" class="nav-item" onclick="App.switchTab('study')">
+        <span class="nav-icon">📖</span>
+        <span class="nav-label">Ôn tập</span>
+      </button>
+      <button id="nav-quiz" class="nav-item" onclick="App.switchTab('quiz')">
+        <span class="nav-icon">✍️</span>
+        <span class="nav-label">Trắc nghiệm</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL 1: ĐĂNG NHẬP ADMIN PHỤ HUYNH -->
+  <div id="admin-auth-modal" class="modal-backdrop hidden">
+    <div class="modal-sheet auth-sheet">
+      <div class="modal-header">
+        <h3>🔐 Đăng nhập Admin Phụ Huynh</h3>
+        <button class="btn-close" onclick="Admin.closeAuthModal()">✕</button>
+      </div>
+      <p class="hint-text">Nhập mật khẩu quản trị để cập nhật kho dữ liệu bài tập hoặc xem cấu hình theo dõi.</p>
+      <input type="password" id="admin-pass-input" class="input-field" inputmode="numeric" placeholder="Nhập mật khẩu (123456789)" onkeydown="if(event.key==='Enter') Admin.login()" />
+      <p id="admin-auth-error" class="status-msg error-text hidden"></p>
+      <button class="btn btn-primary full-width" onclick="Admin.login()">Mở khóa trang Admin →</button>
+    </div>
+  </div>
+
+  <!-- MODAL 2: GIAO DIỆN QUẢN TRỊ ADMIN PHỤ HUYNH -->
+  <div id="admin-panel-modal" class="modal-backdrop hidden">
+    <div class="modal-sheet admin-full-sheet">
+      <div class="modal-header">
+        <div>
+          <h3>👨‍👩‍👧 Quản Trị Kho Dữ Liệu (Admin)</h3>
+          <span class="admin-badge-live">Đã mở khóa quyền Phụ Huynh</span>
+        </div>
+        <button class="btn-close" onclick="Admin.closeAdminPanel()">✕</button>
+      </div>
+
+      <!-- Admin Sub-Tabs -->
+      <div class="admin-tabs">
+        <button id="atab-upload" class="admin-tab-btn active" onclick="Admin.switchAdminTab('upload')">📤 Nạp File / Ảnh</button>
+        <button id="atab-manage" class="admin-tab-btn" onclick="Admin.switchAdminTab('manage')">🗂️ Kho đã nạp (<span id="custom-total-badge">0</span>)</button>
+        <button id="atab-track" class="admin-tab-btn" onclick="Admin.switchAdminTab('track')">📊 Google Sheets</button>
+      </div>
+
+      <!-- TAB A: UPLOAD EXCEL, WORD, HÌNH ẢNH -->
+      <div id="admin-view-upload" class="admin-tab-pane">
+        <!-- 1. Upload Excel -->
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h4>📊 1. Nhập đề từ file Excel (.xlsx, .xls, .csv)</h4>
+            <button class="btn-link-sm" onclick="Admin.downloadExcelTemplate()">⬇ Tải file Excel mẫu</button>
+          </div>
+          <p class="hint-text">Hỗ trợ nhập hàng loạt câu hỏi trắc nghiệm, bài lý thuyết hoặc thẻ ghi nhớ từ bảng tính Excel.</p>
+          <label class="upload-dropzone excel">
+            <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" onchange="Admin.handleExcelUpload(event)" />
+            <span class="uz-icon">📗</span>
+            <span class="uz-title">Chọn file Excel (.xlsx / .csv)</span>
+            <span class="uz-sub">Tự động nhận diện câu hỏi Toán &amp; Ngữ Văn</span>
+          </label>
+          <div id="excel-upload-status" class="status-msg"></div>
+        </div>
+
+        <!-- 2. Upload Word -->
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h4>📝 2. Nhập đề từ file Word (.docx)</h4>
+            <select id="word-subject-select" class="select-sm">
+              <option value="math">Môn Toán 6</option>
+              <option value="lit">Môn Ngữ văn 6</option>
+            </select>
+          </div>
+          <p class="hint-text">Tự động tách câu hỏi theo định dạng <code>Câu 1: ... A. ... B. ... C. ... D. ... Đáp án: A</code> hoặc lưu thành bài ôn tập lý thuyết.</p>
+          <label class="upload-dropzone word">
+            <input type="file" id="word-file-input" accept=".docx" onchange="Admin.handleWordUpload(event)" />
+            <span class="uz-icon">📘</span>
+            <span class="uz-title">Chọn file Word (.docx)</span>
+            <span class="uz-sub">Đọc nội dung trực tiếp không cần cài phần mềm</span>
+          </label>
+          <div id="word-upload-status" class="status-msg"></div>
+        </div>
+
+        <!-- 3. Upload Hình ảnh bài tập / sơ đồ -->
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h4>🖼️ 3. Tải lên Hình ảnh bài tập / Sơ đồ</h4>
+            <select id="img-type-select" class="select-sm" onchange="Admin.toggleImgQuizFields()">
+              <option value="lesson">Lưu vào Lý thuyết / Đề ảnh</option>
+              <option value="quiz">Tạo Câu hỏi trắc nghiệm có ảnh</option>
+            </select>
+          </div>
+          <p class="hint-text">Chụp ảnh bài tập trong sách/phiếu bài tập và gắn trực tiếp vào ứng dụng cho con làm.</p>
+
+          <div class="form-grid-2">
+            <select id="img-subject-select" class="input-field">
+              <option value="math">📐 Toán học 6</option>
+              <option value="lit">📚 Ngữ văn 6</option>
+            </select>
+            <input type="text" id="img-title-input" class="input-field" placeholder="Tiêu đề / Chuyên đề..." />
+          </div>
+
+          <label class="upload-dropzone image">
+            <input type="file" id="image-file-input" accept="image/*" onchange="Admin.handleImageSelect(event)" />
+            <span class="uz-icon">📸</span>
+            <span class="uz-title" id="img-file-label">Chọn hoặc chụp hình ảnh (.jpg, .png)</span>
+            <span class="uz-sub">Tự động tối ưu dung lượng hiển thị trên điện thoại</span>
+          </label>
+
+          <div id="img-preview-wrap" class="img-preview-wrap hidden">
+            <img id="img-preview" src="" alt="Xem trước ảnh" />
+          </div>
+
+          <textarea id="img-desc-input" class="textarea-field" rows="2" placeholder="Ghi chú hướng dẫn hoặc nội dung câu hỏi cho hình ảnh này..."></textarea>
+
+          <!-- Extra fields if creating a Quiz with Image -->
+          <div id="img-quiz-extra" class="hidden">
+            <div class="form-grid-2">
+              <input type="text" id="img-opt-a" class="input-field" placeholder="Đáp án A" />
+              <input type="text" id="img-opt-b" class="input-field" placeholder="Đáp án B" />
+              <input type="text" id="img-opt-c" class="input-field" placeholder="Đáp án C" />
+              <input type="text" id="img-opt-d" class="input-field" placeholder="Đáp án D" />
+            </div>
+            <div class="form-grid-2">
+              <select id="img-correct-opt" class="input-field">
+                <option value="0">Đáp án đúng: A</option>
+                <option value="1">Đáp án đúng: B</option>
+                <option value="2">Đáp án đúng: C</option>
+                <option value="3">Đáp án đúng: D</option>
+              </select>
+              <input type="text" id="img-explain-input" class="input-field" placeholder="Giải thích ngắn gọn..." />
+            </div>
+          </div>
+
+          <button class="btn btn-primary full-width" onclick="Admin.saveImageEntry()">➕ Thêm vào kho bài học ngay</button>
+          <div id="img-upload-status" class="status-msg"></div>
+        </div>
+      </div>
+
+      <!-- TAB B: QUẢN LÝ & ĐỒNG BỘ KHO DỮ LIỆU -->
+      <div id="admin-view-manage" class="admin-tab-pane hidden">
+        <div class="admin-card">
+          <h4>📦 Đồng bộ dữ liệu lên GitHub / Điện thoại của con</h4>
+          <p class="hint-text">Dữ liệu bạn vừa tải lên đang lưu trên trình duyệt này. Bạn có thể xuất tệp <code>data.js</code> để cập nhật lên GitHub (mọi máy đều thấy) hoặc chia sẻ file <code>.json</code> sang máy con.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="Admin.exportFullDataJs()">⬇ Xuất file data.js (GitHub)</button>
+            <button class="btn btn-secondary" onclick="Admin.exportCustomJson()">📤 Xuất gói .JSON</button>
+          </div>
+          <div style="margin-top: 8px;">
+            <label class="btn btn-secondary full-width" style="display:block; text-align:center;">
+              📥 Nhập gói dữ liệu (.JSON) từ máy khác
+              <input type="file" accept=".json" style="display:none;" onchange="Admin.importCustomJson(event)" />
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h4>📋 Danh sách nội dung Phụ huynh đã thêm</h4>
+            <button class="btn-link-sm danger-text" onclick="Admin.clearAllCustomData()">Xóa tất cả</button>
+          </div>
+          <div id="custom-items-list" class="custom-items-list">
+            <p class="hint-text">Chưa có dữ liệu tự nạp nào.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB C: GOOGLE SHEETS & KIỂM TRA MÃ -->
+      <div id="admin-view-track" class="admin-tab-pane hidden">
+        <div class="admin-card">
+          <h4>1. Tự động lưu điểm về Google Sheets</h4>
+          <p class="hint-text">Dán URL Google Apps Script Web App để tự động ghi nhận kết quả mỗi khi con nộp bài.</p>
+          <input type="url" id="sheet-url-input" class="input-field" placeholder="https://script.google.com/macros/s/.../exec" />
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="App.saveSheetUrl()">Lưu cấu hình</button>
+            <button class="btn btn-secondary" onclick="App.sendTestReport()">Gửi dữ liệu Test</button>
+          </div>
+          <p id="parent-config-msg" class="status-msg"></p>
+        </div>
+
+        <div class="admin-card">
+          <h4>2. Kiểm tra mã xác thực phiếu điểm</h4>
+          <p class="hint-text">Dán nội dung tin nhắn con gửi qua Zalo vào đây để kiểm tra xem điểm số có bị chỉnh sửa hay không.</p>
+          <textarea id="verify-input" class="textarea-field" rows="4" placeholder="Dán toàn bộ tin nhắn phiếu báo cáo kết quả vào đây..."></textarea>
+          <div class="btn-row">
+            <button class="btn btn-secondary" onclick="App.pasteToVerify()">📋 Dán nhanh</button>
+            <button class="btn btn-primary" onclick="App.verifyReportMessage()">🔍 Kiểm tra mã ngay</button>
+          </div>
+          <div id="verify-result" class="verify-box hidden"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Modular Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
